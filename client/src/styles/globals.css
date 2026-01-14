@@ -1,0 +1,370 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --bg: 7 11 20;
+  --fg: 244 246 255;
+  --muted: 167 176 198;
+  --surface: 15 23 42;
+  --surface2: 11 18 34;
+  --border: 255 255 255;
+  --border-a: 0.10;
+  --ring: 56 189 248;
+  --brand-a: 45 212 191;
+  --brand-b: 79 124 255;
+  --on-brand: 255 255 255;
+  --glow-a: 56 189 248;
+  --glow-b: 79 124 255;
+  --glow-c: 246 193 119;
+  --glow-d: 167 139 250;
+  --glow-e: 45 212 191;
+  --input-bg: 255 255 255;
+  --input-a: 0.07;
+  --kbd-bg: 255 255 255;
+  --kbd-a: 0.06;
+  --shadow: 0 12px 34px rgba(0,0,0,0.42);
+  --shadow-lift: 0 22px 70px rgba(0,0,0,0.62);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg: 247 244 238;
+  --fg: 16 24 40;
+  --muted: 90 107 133;
+  --surface: 255 255 255;
+  --surface2: 240 236 228;
+  --border: 12 19 33;
+  --border-a: 0.12;
+  --ring: 59 130 246;
+  --brand-a: 20 184 166;
+  --brand-b: 79 124 255;
+  --on-brand: 255 255 255;
+  --glow-a: 96 165 250;
+  --glow-b: 167 139 250;
+  --glow-c: 246 193 119;
+  --glow-d: 79 124 255;
+  --glow-e: 20 184 166;
+  --input-bg: 15 23 42;
+  --input-a: 0.05;
+  --kbd-bg: 15 23 42;
+  --kbd-a: 0.04;
+  --shadow: 0 12px 32px rgba(12,19,33,0.10);
+  --shadow-lift: 0 20px 60px rgba(12,19,33,0.14);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  background: rgb(var(--bg));
+  color: rgb(var(--fg));
+}
+
+:root[data-theme='light'] body {
+  background: radial-gradient(1000px 520px at 18% 0%, rgb(var(--glow-a) / 0.18), transparent 55%),
+    radial-gradient(920px 520px at 86% 18%, rgb(var(--glow-b) / 0.16), transparent 52%),
+    radial-gradient(820px 520px at 70% 90%, rgb(var(--glow-c) / 0.16), transparent 55%),
+    radial-gradient(900px 520px at 8% 80%, rgb(var(--glow-e) / 0.14), transparent 58%),
+    radial-gradient(780px 520px at 92% 92%, rgb(var(--glow-d) / 0.14), transparent 60%),
+    rgb(var(--bg));
+}
+
+#root {
+  min-height: 100%;
+}
+
+::selection {
+  background: rgba(var(--ring), 0.44);
+  color: rgb(var(--on-brand));
+  text-shadow: none;
+}
+
+/* Higher-contrast notifications in light mode */
+:root[data-theme='light'] .text-rose-200 {
+  color: rgb(159 18 57) !important;
+}
+:root[data-theme='light'] .text-emerald-200 {
+  color: rgb(4 120 87) !important;
+}
+:root[data-theme='light'] .border-rose-500\/30 {
+  border-color: rgb(244 63 94 / 0.55) !important;
+}
+:root[data-theme='light'] .bg-rose-500\/10 {
+  background-color: rgb(244 63 94 / 0.16) !important;
+}
+:root[data-theme='light'] .border-emerald-500\/30 {
+  border-color: rgb(16 185 129 / 0.55) !important;
+}
+:root[data-theme='light'] .bg-emerald-500\/10 {
+  background-color: rgb(16 185 129 / 0.16) !important;
+}
+
+/* Theme-compat shim: maps existing Tailwind "dark-first" utility usage to light tokens.
+   This avoids editing every page file while still making light mode readable. */
+:root[data-theme='light'] .text-white {
+  color: rgb(var(--fg)) !important;
+}
+:root[data-theme='light'] .text-white\/45 {
+  color: rgb(var(--fg) / 0.45) !important;
+}
+:root[data-theme='light'] .text-white\/55 {
+  color: rgb(var(--fg) / 0.60) !important;
+}
+:root[data-theme='light'] .text-white\/60 {
+  color: rgb(var(--fg) / 0.66) !important;
+}
+:root[data-theme='light'] .text-white\/65 {
+  color: rgb(var(--fg) / 0.70) !important;
+}
+:root[data-theme='light'] .text-white\/70 {
+  color: rgb(var(--fg) / 0.74) !important;
+}
+:root[data-theme='light'] .text-white\/75 {
+  color: rgb(var(--fg) / 0.78) !important;
+}
+:root[data-theme='light'] .text-white\/80 {
+  color: rgb(var(--fg) / 0.84) !important;
+}
+:root[data-theme='light'] .text-white\/85 {
+  color: rgb(var(--fg) / 0.90) !important;
+}
+:root[data-theme='light'] .text-white\/90 {
+  color: rgb(var(--fg) / 0.94) !important;
+}
+:root[data-theme='light'] .text-white\/95 {
+  color: rgb(var(--fg) / 0.98) !important;
+}
+
+/* Robust fallback for class escaping edge cases (e.g. text-white/90) */
+:root[data-theme='light'] [class~="text-white/90"] {
+  color: rgb(var(--fg) / 0.94) !important;
+}
+
+/* Hover utility compatibility */
+:root[data-theme='light'] .hover\:text-white:hover {
+  color: rgb(var(--fg)) !important;
+}
+:root[data-theme='light'] .hover\:text-white\/70:hover {
+  color: rgb(var(--fg) / 0.74) !important;
+}
+:root[data-theme='light'] .hover\:text-white\/85:hover {
+  color: rgb(var(--fg) / 0.90) !important;
+}
+
+:root[data-theme='light'] .border-white\/10 {
+  border-color: rgb(var(--border) / 0.14) !important;
+}
+:root[data-theme='light'] .border-white\/12 {
+  border-color: rgb(var(--border) / 0.16) !important;
+}
+:root[data-theme='light'] .border-white\/14 {
+  border-color: rgb(var(--border) / 0.18) !important;
+}
+
+:root[data-theme='light'] .bg-white\/5 {
+  background-color: rgb(var(--input-bg) / var(--input-a)) !important;
+}
+:root[data-theme='light'] .bg-white\/10 {
+  background-color: rgb(var(--input-bg) / calc(var(--input-a) + 0.08)) !important;
+}
+
+:root[data-theme='light'] .bg-black\/30 {
+  background-color: rgb(var(--border) / 0.04) !important;
+}
+
+:root[data-theme='light'] .bg-black\/40 {
+  background-color: rgb(var(--border) / 0.06) !important;
+}
+
+:root[data-theme='light'] .bg-black\/50 {
+  background-color: rgb(var(--border) / 0.08) !important;
+}
+
+:root[data-theme='light'] .shadow-ring {
+  box-shadow: 0 0 0 1px rgb(var(--border) / 0.14) inset !important;
+}
+
+:root[data-theme='light'] .divide-white\/10 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgb(var(--border) / 0.14) !important;
+}
+
+@layer components {
+  .ds-container {
+    @apply mx-auto w-full max-w-screen-2xl px-4 sm:px-6 lg:px-10;
+  }
+
+  .ds-panel {
+    @apply rounded-3xl border shadow-soft;
+    position: relative;
+    background: linear-gradient(180deg, rgb(var(--surface) / 0.8), rgb(var(--surface2) / 0.75));
+    border-color: rgb(var(--border) / var(--border-a));
+  }
+
+  .shadow-soft {
+    box-shadow: var(--shadow);
+  }
+
+  .shadow-lift {
+    box-shadow: var(--shadow-lift);
+  }
+
+  .ds-input {
+    @apply h-11 w-full rounded-xl border px-3 text-sm outline-none;
+    color: rgb(var(--fg));
+    background: rgb(var(--input-bg) / var(--input-a));
+    border-color: rgb(var(--border) / 0.14);
+  }
+
+  .ds-input::placeholder {
+    color: rgb(var(--fg) / 0.45);
+  }
+
+  .ds-input:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+
+  .ds-input:focus {
+    border-color: rgb(var(--ring) / 0.65);
+    box-shadow: 0 0 0 4px rgb(var(--ring) / 0.18);
+  }
+
+  select.ds-input {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image:
+      linear-gradient(45deg, transparent 50%, rgb(var(--fg) / 0.55) 50%),
+      linear-gradient(135deg, rgb(var(--fg) / 0.55) 50%, transparent 50%);
+    background-position:
+      calc(100% - 16px) calc(1em + 2px),
+      calc(100% - 11px) calc(1em + 2px);
+    background-size:
+      5px 5px,
+      5px 5px;
+    background-repeat: no-repeat;
+    padding-right: 2.25rem;
+  }
+
+  select.ds-input option {
+    background: rgb(var(--surface));
+    color: rgb(var(--fg));
+  }
+
+  .ds-btn {
+    @apply inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold tracking-tight transition;
+  }
+
+  .ds-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgb(var(--ring) / 0.20);
+  }
+
+  .ds-btn-primary {
+    @apply ds-btn;
+    color: rgb(var(--on-brand));
+    background: linear-gradient(135deg, rgb(var(--brand-b) / 1), rgb(var(--brand-a) / 1));
+    text-shadow: 0 1px 1px rgba(0,0,0,0.28);
+  }
+
+  .ds-btn-primary:hover {
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+  }
+
+  .ds-btn-primary:active {
+    transform: translateY(0px);
+  }
+
+  .ds-btn-secondary {
+    @apply ds-btn border;
+    color: rgb(var(--fg));
+    background: linear-gradient(180deg, rgb(var(--input-bg) / calc(var(--input-a) + 0.06)), rgb(var(--input-bg) / var(--input-a)));
+    border-color: rgb(var(--border) / 0.18);
+  }
+
+  .ds-btn-secondary:hover {
+    background: linear-gradient(
+      180deg,
+      rgb(var(--input-bg) / calc(var(--input-a) + 0.10)),
+      rgb(var(--input-bg) / calc(var(--input-a) + 0.06))
+    );
+    transform: translateY(-1px);
+  }
+
+  .ds-btn-secondary:active {
+    transform: translateY(0px);
+  }
+
+  .ds-btn-danger {
+    @apply ds-btn border;
+    color: rgb(var(--fg));
+    background: rgba(244, 63, 94, 0.12);
+    border-color: rgba(244, 63, 94, 0.32);
+  }
+
+  .ds-btn-danger:hover {
+    background: rgba(244, 63, 94, 0.16);
+    transform: translateY(-1px);
+  }
+
+  .ds-btn-danger:active {
+    transform: translateY(0px);
+  }
+
+  .ds-btn:disabled,
+  .ds-btn[aria-disabled='true'] {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+    filter: none;
+  }
+
+  .ds-status {
+    @apply inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold;
+  }
+
+  .ds-status-default {
+    color: rgb(var(--fg) / 0.78);
+    background: rgb(var(--input-bg) / calc(var(--input-a) + 0.06));
+    border-color: rgb(var(--border) / 0.18);
+  }
+
+  .ds-status-paid {
+    color: rgba(16, 185, 129, 0.95);
+    background: rgba(16, 185, 129, 0.14);
+    border-color: rgba(16, 185, 129, 0.36);
+  }
+
+  .ds-status-accepted {
+    color: rgba(16, 185, 129, 0.95);
+    background: rgba(16, 185, 129, 0.14);
+    border-color: rgba(16, 185, 129, 0.36);
+  }
+
+  .ds-status-overdue {
+    color: rgba(244, 63, 94, 0.95);
+    background: rgba(244, 63, 94, 0.14);
+    border-color: rgba(244, 63, 94, 0.36);
+  }
+
+  .ds-status-rejected {
+    color: rgba(244, 63, 94, 0.95);
+    background: rgba(244, 63, 94, 0.14);
+    border-color: rgba(244, 63, 94, 0.36);
+  }
+
+  .ds-kbd {
+    @apply rounded-lg border px-2 py-1 text-[11px] font-semibold;
+    color: rgb(var(--fg) / 0.70);
+    background: rgb(var(--kbd-bg) / var(--kbd-a));
+    border-color: rgb(var(--border) / 0.14);
+  }
+}
