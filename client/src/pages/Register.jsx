@@ -116,7 +116,7 @@ function Register() {
               </label>
               <input
                 id="name"
-                className="ds-input"
+                className="ds-input px-4"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter your name"
