@@ -119,7 +119,7 @@ function Register() {
                 className="ds-input"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Aryan"
+                placeholder="Enter your name"
                 required
               />
               {name ? <div className={nameError ? 'text-xs font-semibold text-rose-200' : 'text-xs text-white/55'}>{nameError || 'Looks good.'}</div> : null}
