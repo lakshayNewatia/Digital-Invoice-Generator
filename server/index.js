@@ -10,7 +10,7 @@ connectDB();
 const app = express();
 
 const allowedOrigins = [
-  'https://digital-invoice-generator.vercel.app',
+  'https://digital-invoice-generator-hprm-ddvmqwkzq.vercel.app',
   'http://localhost:5173',
 ];
 
