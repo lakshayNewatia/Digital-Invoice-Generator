@@ -1,3 +1,6 @@
+console.log('ENV CHECK →', import.meta.env);
+
+
 const API_ERROR_FALLBACK = 'Request failed. Please try again.';
 
 // ✅ API base (dev + prod safe)
