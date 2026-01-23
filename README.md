@@ -3,7 +3,7 @@
 A **production-ready full-stack MERN application** that enables businesses to securely create, manage, and send professional invoices end-to-end — from client onboarding to PDF/email delivery and reporting.
 
 🔗 **Deployment Links**  
-- Live Application: https://digital-invoice-generator.vercel.app  
+- Live Application: https://digital-invoice-generator-hprm.vercel.app  
 - Server API Status: https://digital-invoice-generator.onrender.com  
 
 ---
