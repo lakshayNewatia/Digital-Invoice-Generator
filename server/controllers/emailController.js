@@ -250,72 +250,60 @@ async function sendAndLog({ req, invoice, currency, mail }) {
   const pdfData = await generateInvoicePdfBuffer(invoice, mail.pdfOpts);
 
   const transporter = makeTransporter();
-  try {
-    try {
-      await transporter.verify();
-    } catch (verifyErr) {
-      const result = await sendWithBrevoApi({ mail, pdfData, invoice });
+try {
+  // Verify SMTP connection
+  await transporter.verify();
 
-      await EmailLog.create({
-        ...logBase,
-        status: 'sent',
-        providerMessageId: String(result.messageId || ''),
-        accepted: result.accepted || [],
-        rejected: result.rejected || [],
-        providerResponse: String(result.response || ''),
-        sentAt: new Date(),
-      });
+  // Send email via Gmail SMTP
+  const info = await transporter.sendMail({
+    from: logBase.from,
+    to: logBase.to.join(', '),
+    cc: logBase.cc.length ? logBase.cc.join(', ') : undefined,
+    bcc: logBase.bcc.length ? logBase.bcc.join(', ') : undefined,
+    subject: logBase.subject,
+    text: logBase.bodyText,
+    attachments: [
+      {
+        filename: `invoice-${invoice.invoiceNumber || invoice._id}.pdf`,
+        content: pdfData,
+        contentType: 'application/pdf',
+      },
+    ],
+  });
 
-      return result;
-    }
+  const accepted = Array.isArray(info?.accepted) ? info.accepted.map((x) => String(x)) : [];
+  const rejected = Array.isArray(info?.rejected) ? info.rejected.map((x) => String(x)) : [];
+  const providerResponse = String(info?.response || '');
 
-    const info = await transporter.sendMail({
-      from: logBase.from,
-      to: logBase.to.join(', '),
-      cc: logBase.cc.length ? logBase.cc.join(', ') : undefined,
-      bcc: logBase.bcc.length ? logBase.bcc.join(', ') : undefined,
-      subject: logBase.subject,
-      text: logBase.bodyText,
-      attachments: [
-        {
-          filename: `invoice-${invoice.invoiceNumber || invoice._id}.pdf`,
-          content: pdfData,
-          contentType: 'application/pdf',
-        },
-      ],
-    });
+  // Log sent email
+  await EmailLog.create({
+    ...logBase,
+    status: 'sent',
+    providerMessageId: String(info?.messageId || ''),
+    accepted,
+    rejected,
+    providerResponse,
+    sentAt: new Date(),
+  });
 
-    const accepted = Array.isArray(info?.accepted) ? info.accepted.map((x) => String(x)) : [];
-    const rejected = Array.isArray(info?.rejected) ? info.rejected.map((x) => String(x)) : [];
-    const providerResponse = String(info?.response || '');
-
-    await EmailLog.create({
-      ...logBase,
-      status: 'sent',
-      providerMessageId: String(info?.messageId || ''),
-      accepted,
-      rejected,
-      providerResponse,
-      sentAt: new Date(),
-    });
-
-    return {
-      ok: true,
-      messageId: info?.messageId || '',
-      accepted,
-      rejected,
-      response: providerResponse,
-    };
-  } catch (err) {
-    await EmailLog.create({
-      ...logBase,
-      status: 'failed',
-      errorMessage: String(err?.message || 'Failed to send email'),
-      sentAt: new Date(),
-    });
-    throw err;
-  }
+  return {
+    ok: true,
+    messageId: info?.messageId || '',
+    accepted,
+    rejected,
+    response: providerResponse,
+  };
+} catch (err) {
+  // Log failed email
+  await EmailLog.create({
+    ...logBase,
+    status: 'failed',
+    errorMessage: String(err?.message || 'Failed to send email'),
+    sentAt: new Date(),
+  });
+  throw err;
 }
+
 
 const getInvoiceEmailDraft = async (req, res) => {
   try {
