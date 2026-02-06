@@ -250,7 +250,8 @@ async function sendAndLog({ req, invoice, currency, mail }) {
   const pdfData = await generateInvoicePdfBuffer(invoice, mail.pdfOpts);
 
   const transporter = makeTransporter();
-try {
+  
+  try {
   // Verify SMTP connection
   await transporter.verify();
 
