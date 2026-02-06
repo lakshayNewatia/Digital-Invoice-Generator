@@ -53,26 +53,35 @@ function requireEmailConfig() {
 }
 
 function makeTransporter() {
-  const port = Number(process.env.EMAIL_PORT);
-  const secure = port === 465;
-
   return nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port,
-    secure,
+    host: process.env.EMAIL_HOST, // smtp.gmail.com
+    port: Number(process.env.EMAIL_PORT) || 587, // TLS port
+    secure: false,               // must be false for port 587
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
+      user: process.env.EMAIL_USER, // your Gmail
+      pass: process.env.EMAIL_PASS, // Gmail App Password
     },
-    requireTLS: !secure,
+    requireTLS: true,            // force TLS
     tls: {
-      servername: process.env.EMAIL_HOST,
+      rejectUnauthorized: false, // fixes some TLS connection issues
     },
-    connectionTimeout: 20_000,
-    greetingTimeout: 20_000,
-    socketTimeout: 30_000,
+    connectionTimeout: 20000,    // 20 seconds
+    greetingTimeout: 20000,
+    socketTimeout: 30000,
   });
 }
+
+// to test-------------
+const transporter = makeTransporter();
+
+transporter.verify((err, success) => {
+  if (err) {
+    console.log('SMTP Connection Error:', err);
+  } else {
+    console.log('SMTP is ready to send emails!');
+  }
+});
+
 
 async function sendWithBrevoApi({ mail, pdfData, invoice }) {
   const apiKey = process.env.BREVO_API_KEY;
