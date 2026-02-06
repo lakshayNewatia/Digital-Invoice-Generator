@@ -8,25 +8,20 @@ const { getLatestRatesInr, getRateFromInr, normalizeCurrencyCode } = require('..
 const fetchFn =
   typeof fetch === 'function'
     ? fetch
-    : (...args) =>
-        import('node-fetch').then(({ default: nodeFetch }) => {
-          return nodeFetch(...args);
-        });
+    : (...args) => import('node-fetch').then(({ default: nodeFetch }) => nodeFetch(...args));
 
 function normalizeEmailList(value) {
   if (!value) return [];
   const arr = Array.isArray(value) ? value : String(value).split(',');
-  const cleaned = arr
+  return arr
     .map((x) => String(x || '').trim())
     .filter(Boolean)
     .filter((x, idx, a) => a.indexOf(x) === idx);
-  return cleaned;
 }
 
 function isValidEmail(email) {
   const s = String(email || '').trim();
   if (!s) return false;
-  // Practical (not RFC-perfect) validation.
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 }
 
@@ -34,8 +29,7 @@ function extractEmailAddress(value) {
   const s = String(value || '').trim();
   if (!s) return '';
   const m = s.match(/<([^>]+)>/);
-  const candidate = (m && m[1] ? m[1] : s).trim();
-  return candidate;
+  return (m && m[1] ? m[1] : s).trim();
 }
 
 function requireEmailConfig() {
@@ -44,7 +38,6 @@ function requireEmailConfig() {
   for (const key of ['EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_USER', 'EMAIL_PASS', 'EMAIL_FROM']) {
     if (!process.env[key]) smtpMissing.push(key);
   }
-
   if (!hasBrevo && smtpMissing.length) {
     const err = new Error(`Email not configured. Missing env: ${smtpMissing.join(', ')}`);
     err.statusCode = 400;
@@ -53,36 +46,25 @@ function requireEmailConfig() {
 }
 
 function makeTransporter() {
+  const port = Number(process.env.EMAIL_PORT);
+  const secure = port === 465; // true for SSL
   return nodemailer.createTransport({
-    host: process.env.EMAIL_HOST, // smtp.gmail.com
-    port: 587,                     // TLS port
-    secure: false,                 // must be false for port 587
+    host: process.env.EMAIL_HOST,
+    port,
+    secure,
     auth: {
-      user: process.env.EMAIL_USER, // your Gmail email
-      pass: process.env.EMAIL_PASS, // Gmail App Password
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
     },
-    requireTLS: true,              // force TLS
+    requireTLS: !secure,
     tls: {
-      rejectUnauthorized: false,   // avoids TLS issues
+      servername: process.env.EMAIL_HOST,
     },
-    connectionTimeout: 20000,      // 20s
+    connectionTimeout: 20000,
     greetingTimeout: 20000,
     socketTimeout: 30000,
   });
 }
-
-module.exports = { makeTransporter };
-// to test-------------
-const transporter = makeTransporter();
-
-transporter.verify((err, success) => {
-  if (err) {
-    console.log('SMTP Connection Error:', err);
-  } else {
-    console.log('SMTP is ready to send emails!');
-  }
-});
-
 
 async function sendWithBrevoApi({ mail, pdfData, invoice }) {
   const apiKey = process.env.BREVO_API_KEY;
@@ -99,7 +81,7 @@ async function sendWithBrevoApi({ mail, pdfData, invoice }) {
 
   if (!isValidEmail(senderEmail)) {
     const err = new Error(
-      'Brevo requires a valid sender email. Set EMAIL_FROM to a verified Brevo sender (example: billing@yourdomain.com).',
+      'Brevo requires a valid sender email. Set EMAIL_FROM to a verified Brevo sender (example: billing@yourdomain.com).'
     );
     err.statusCode = 400;
     throw err;
@@ -122,11 +104,9 @@ async function sendWithBrevoApi({ mail, pdfData, invoice }) {
     ],
   };
 
-  // Always keep the user's email as Reply-To when available.
   if (isValidEmail(requestedFrom) && requestedFrom !== senderEmail) {
     payload.replyTo = { email: requestedFrom, name: senderName };
   }
-
   if (ccList.length) payload.cc = ccList;
   if (bccList.length) payload.bcc = bccList;
 
@@ -170,13 +150,11 @@ async function getInvoiceForEmail(req) {
     err.statusCode = 404;
     throw err;
   }
-
   if (String(invoice.user?._id) !== String(req.user?.id)) {
     const err = new Error('User not authorized');
     err.statusCode = 401;
     throw err;
   }
-
   return invoice;
 }
 
@@ -197,7 +175,6 @@ async function generateInvoicePdfBuffer(invoice, opts) {
     doc.on('data', buffers.push.bind(buffers));
     doc.on('error', reject);
     doc.on('end', () => resolve(Buffer.concat(buffers)));
-
     try {
       generateCustomInvoicePDF(doc, invoice, invoice.client, invoice.items, invoice.user, opts);
       doc.end();
@@ -210,10 +187,8 @@ async function generateInvoicePdfBuffer(invoice, opts) {
 function defaultEmailDraft(invoice) {
   const fromName = invoice?.user?.companyName || invoice?.user?.name || 'Invoice Studio';
   const invNo = invoice?.invoiceNumber || invoice?._id;
-
   const to = invoice?.client?.email ? [String(invoice.client.email)] : [];
   const subject = `Invoice #${invNo} from ${fromName}`;
-
   const lines = [
     `Hi ${invoice?.client?.name || ''},`.trim(),
     '',
@@ -258,11 +233,25 @@ async function sendAndLog({ req, invoice, currency, mail }) {
   }
 
   const pdfData = await generateInvoicePdfBuffer(invoice, mail.pdfOpts);
-
   const transporter = makeTransporter();
 
   try {
-    await transporter.verify(); // just verify SMTP
+    try {
+      await transporter.verify(); // SMTP verification
+    } catch (verifyErr) {
+      // fallback to Brevo if SMTP fails
+      const result = await sendWithBrevoApi({ mail, pdfData, invoice });
+      await EmailLog.create({
+        ...logBase,
+        status: 'sent',
+        providerMessageId: String(result.messageId || ''),
+        accepted: result.accepted || [],
+        rejected: result.rejected || [],
+        providerResponse: String(result.response || ''),
+        sentAt: new Date(),
+      });
+      return result;
+    }
 
     const info = await transporter.sendMail({
       from: logBase.from,
@@ -280,11 +269,10 @@ async function sendAndLog({ req, invoice, currency, mail }) {
       ],
     });
 
-    const accepted = Array.isArray(info?.accepted) ? info.accepted.map((x) => String(x)) : [];
-    const rejected = Array.isArray(info?.rejected) ? info.rejected.map((x) => String(x)) : [];
+    const accepted = Array.isArray(info?.accepted) ? info.accepted.map(String) : [];
+    const rejected = Array.isArray(info?.rejected) ? info.rejected.map(String) : [];
     const providerResponse = String(info?.response || '');
 
-    // log email
     await EmailLog.create({
       ...logBase,
       status: 'sent',
@@ -295,13 +283,7 @@ async function sendAndLog({ req, invoice, currency, mail }) {
       sentAt: new Date(),
     });
 
-    return {
-      ok: true,
-      messageId: info?.messageId || '',
-      accepted,
-      rejected,
-      response: providerResponse,
-    };
+    return { ok: true, messageId: info?.messageId || '', accepted, rejected, response: providerResponse };
   } catch (err) {
     await EmailLog.create({
       ...logBase,
@@ -313,6 +295,7 @@ async function sendAndLog({ req, invoice, currency, mail }) {
   }
 }
 
+// Controllers
 const getInvoiceEmailDraft = async (req, res) => {
   try {
     const invoice = await getInvoiceForEmail(req);
@@ -336,12 +319,8 @@ const sendInvoiceEmailCustom = async (req, res) => {
     const subject = String(req.body?.subject || '').trim();
     const bodyText = String(req.body?.bodyText || '').trim();
 
-    if (!subject) {
-      return res.status(400).send('Subject is required');
-    }
-    if (!bodyText) {
-      return res.status(400).send('Email content is required');
-    }
+    if (!subject) return res.status(400).send('Subject is required');
+    if (!bodyText) return res.status(400).send('Email content is required');
 
     const result = await sendAndLog({
       req,
@@ -399,8 +378,8 @@ const sendInvoiceEmail = async (req, res) => {
   try {
     const invoice = await getInvoiceForEmail(req);
     const { currency, rate } = await resolveCurrencyAndRate(req);
-
     const draft = defaultEmailDraft(invoice);
+
     const result = await sendAndLog({
       req,
       invoice,
