@@ -55,22 +55,23 @@ function requireEmailConfig() {
 function makeTransporter() {
   return nodemailer.createTransport({
     host: process.env.EMAIL_HOST, // smtp.gmail.com
-    port: Number(process.env.EMAIL_PORT) || 587, // TLS port
-    secure: false,               // must be false for port 587
+    port: 587,                     // TLS port
+    secure: false,                 // must be false for port 587
     auth: {
-      user: process.env.EMAIL_USER, // your Gmail
+      user: process.env.EMAIL_USER, // your Gmail email
       pass: process.env.EMAIL_PASS, // Gmail App Password
     },
-    requireTLS: true,            // force TLS
+    requireTLS: true,              // force TLS
     tls: {
-      rejectUnauthorized: false, // fixes some TLS connection issues
+      rejectUnauthorized: false,   // avoids TLS issues
     },
-    connectionTimeout: 20000,    // 20 seconds
+    connectionTimeout: 20000,      // 20s
     greetingTimeout: 20000,
     socketTimeout: 30000,
   });
 }
 
+module.exports = { makeTransporter };
 // to test-------------
 const transporter = makeTransporter();
 
